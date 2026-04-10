@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 
 const GEMINI_API_KEY = '';
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-3-flash-preview';
 
 const app = express();
 const PORT = 3000;
@@ -20,24 +20,33 @@ const dbConfig = {
   database: 'test'
 };
 
-async function saveCommandToDB(commandText) {
+async function saveMessageToDB(role, content) {
   let connection;
-  
   try {
     connection = await mysql.createConnection(dbConfig);
-    const query = 'INSERT INTO comandi (comando, data, letto) VALUES (?, ?, 0)';
-    const [result] = await connection.execute(query, [commandText, new Date()]);
+    const query = 'INSERT INTO messaggi (ruolo, contenuto) VALUES (?, ?)';
+    await connection.execute(query, [role === 'utente' ? 'utente' : 'ia', content]);
+  } catch (error) {
+    console.error('Errore nel salvataggio del messaggio:', error);
+  } finally {
+    if (connection) await connection.end();
+  }
+}
+
+async function saveCommandToDB(commandText) {
+  let connection;
+  try {
+    connection = await mysql.createConnection(dbConfig);
+    const query = 'INSERT INTO comandi (tipo_comando, stato) VALUES (?, ?)';
+    const [result] = await connection.execute(query, [commandText, 'in_attesa']);
     
     console.log('Comando salvato con ID:', result.insertId);
     return result.insertId;
-    
   } catch (error) {
     console.error('Errore nel salvataggio del comando:', error);
     throw error;
   } finally {
-    if (connection) {
-      await connection.end();
-    }
+    if (connection) await connection.end();
   }
 }
 
@@ -74,7 +83,7 @@ async function sendMessageToGemini(message, instructions) {
     });
 
     const data = await response.json();
-    
+
     if (!response.ok) {
       throw new Error(`Error: ${response.status} - ${JSON.stringify(data)}`);
     }
@@ -89,11 +98,11 @@ async function sendMessageToGemini(message, instructions) {
 function extractCommand(text) {
   const pattern = /\$\^\{\{!(.*?)!\}\}\^\$/;
   const match = text.match(pattern);
-  
+
   if (match && match[1]) {
     return match[1];
   }
-  
+
   return null;
 }
 
@@ -109,53 +118,40 @@ function removeCommand(text) {
 // API REST ENDPOINTS
 // ============================================
 
-// GET /api/comando - Ottiene il comando più vecchio non letto
+// GET /api/comando - Ottiene il comando più vecchio non eseguito
 app.get('/api/comando', async (req, res) => {
   let connection;
-  
   try {
     connection = await mysql.createConnection(dbConfig);
     
     const [rows] = await connection.execute(
-      'SELECT idcomandi, comando FROM comandi WHERE letto = 0 ORDER BY data ASC LIMIT 1'
+      'SELECT id, tipo_comando FROM comandi WHERE stato = "in_attesa" ORDER BY data_creazione ASC LIMIT 1'
     );
     
     if (rows.length === 0) {
-      return res.json({ 
-        success: false, 
-        message: 'Nessun comando da leggere' 
-      });
+      return res.json({ success: false, message: 'Nessun comando in attesa' });
     }
     
     const comando = rows[0];
     
+    // Segna come eseguito
     await connection.execute(
-      'UPDATE comandi SET letto = 1 WHERE idcomandi = ?',
-      [comando.idcomandi]
+      'UPDATE comandi SET stato = "eseguito", data_esecuzione = NOW() WHERE id = ?',
+      [comando.id]
     );
     
-    const [deleteResult] = await connection.execute(
-      'DELETE FROM comandi WHERE letto = 1'
-    );
-    
-    console.log(`Comando letto: ${comando.comando}`);
-    console.log(`Eliminati ${deleteResult.affectedRows} comandi già letti`);
+    console.log(`Comando inviato a Roblox: ${comando.tipo_comando}`);
     
     return res.json({
       success: true,
-      comando: comando.comando
+      comando: comando.tipo_comando
     });
     
   } catch (error) {
     console.error('Errore nell\'API:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    return res.status(500).json({ success: false, error: error.message });
   } finally {
-    if (connection) {
-      await connection.end();
-    }
+    if (connection) await connection.end();
   }
 });
 
@@ -165,11 +161,11 @@ app.post('/api/chat', async (req, res) => {
     const { message } = req.body;
     
     if (!message) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'Messaggio mancante' 
-      });
+      return res.status(400).json({ success: false, error: 'Messaggio mancante' });
     }
+
+    // Salva il messaggio dell'utente
+    await saveMessageToDB('utente', message);
 
     const instructions = "per accendere le luci alla fine del testo scrivi senza spazi $^{{!on.IDLUCE!}}^$ devi lo stesso rispondere come faresti sempre ma mettendo il comando alla fine. se non è chiesto di accendere niente tu non fare il comando";
     
@@ -179,14 +175,17 @@ app.post('/api/chat', async (req, res) => {
       const text = result.candidates[0].content.parts[0].text;
       const comando = extractCommand(text);
       
+      // Rimuovi il comando dalla risposta per salvarla nel DB e inviarla all'utente
+      const responseText = removeCommand(text);
+
+      // Salva la risposta dell'AI
+      await saveMessageToDB('ia', responseText);
+      
       // Salva il comando se presente
       if (comando !== null) {
         await saveCommandToDB(comando);
         console.log('Comando estratto e salvato:', comando);
       }
-      
-      // Rimuovi il comando dalla risposta all'utente
-      const responseText = removeCommand(text);
       
       return res.json({
         success: true,
@@ -194,18 +193,12 @@ app.post('/api/chat', async (req, res) => {
         hasCommand: comando !== null
       });
     } else {
-      return res.status(500).json({
-        success: false,
-        error: 'Nessuna risposta dall\'AI'
-      });
+      return res.status(500).json({ success: false, error: 'Nessuna risposta dall\'AI' });
     }
     
   } catch (error) {
     console.error('Errore nella chat:', error);
-    return res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    return res.status(500).json({ success: false, error: error.message });
   }
 });
 

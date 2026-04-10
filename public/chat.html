@@ -3,28 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elena Ai</title>
+    <title>Roblox Ai</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-primary: #0a0b0d;
-            --bg-secondary: #111217;
-            --bg-tertiary: #1a1c23;
-            --bg-card: #151720;
+            --bg-primary: #050506;
+            --bg-secondary: #0b0b0c;
+            --bg-tertiary: #141416;
+            --bg-card: #0f0f10;
             
             --text-primary: #ffffff;
-            --text-secondary: #a0a4b8;
-            --text-tertiary: #6b7280;
+            --text-secondary: #cfd2d6;
+            --text-tertiary: #8b8f96;
             
-            --accent-blue: #3b82f6;
-            --accent-purple: #8b5cf6;
-            --accent-pink: #ec4899;
-            --accent-cyan: #06b6d4;
+            --accent-red: #ff2d2d;
+            --accent-dark: #1b1b1d;
+            --accent-slate: #6b7280;
             
-            --glow-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            --glow-shadow: 0 0 30px rgba(255, 45, 45, 0.18);
         }
 
         * { 
@@ -35,7 +34,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
+            background: linear-gradient(180deg, var(--bg-primary) 0%, #070708 60%);
             color: var(--text-primary);
             height: 100vh;
             display: flex;
@@ -44,58 +43,66 @@
             position: relative;
         }
 
-        /* Animated Background Gradient - Slow and Smooth */
+        /* Soft animated glow */
         body::before {
             content: '';
             position: fixed;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.06) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
-            animation: gradientShift 40s ease-in-out infinite;
+            top: -40%;
+            left: -40%;
+            width: 180%;
+            height: 180%;
+            background: radial-gradient(circle at 25% 40%, rgba(255,45,45,0.06) 0%, transparent 30%),
+                        radial-gradient(circle at 75% 60%, rgba(0,0,0,0.06) 0%, transparent 30%);
+            animation: gradientShift 30s ease-in-out infinite;
             pointer-events: none;
             z-index: 0;
+            filter: blur(30px);
         }
 
         @keyframes gradientShift {
             0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(3%, 3%); }
+            50% { transform: translate(4%, 4%); }
         }
 
         /* === HEADER CON PULSANTE MUTE === */
         .chat-header {
             position: relative;
-            height: 70px;
+            height: 72px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 24px;
-            background: rgba(17, 18, 23, 0.8);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            padding: 0 26px;
+            background: rgba(11, 11, 12, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 100;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.03);
         }
 
         .header-content {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             position: relative;
             z-index: 2;
         }
 
         .header-logo {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-red), #8b0000);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 6px 30px rgba(255,45,45,0.14);
+            transform-origin: center;
+            animation: logoFloat 6s ease-in-out infinite;
+        }
+
+        @keyframes logoFloat {
+            0%,100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-4px) rotate(6deg); }
         }
 
         .header-logo svg {
@@ -106,9 +113,9 @@
 
         .header-title {
             font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            background: linear-gradient(90deg, var(--accent-red), #ff7b7b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -116,45 +123,25 @@
 
         /* Pulsante Mute/Unmute */
         #muteButton {
-            width: 44px;
-            height: 44px;
+            width: 46px;
+            height: 46px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, var(--accent-purple), var(--accent-pink));
+            background: linear-gradient(135deg, #222223, var(--accent-dark));
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+            transition: all 0.22s ease;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.6);
             position: relative;
             overflow: hidden;
         }
 
         #muteButton.muted {
-            background: rgba(107, 114, 128, 0.4);
-            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.3);
-        }
-
-        #muteButton::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        #muteButton:hover::before {
-            opacity: 1;
-        }
-
-        #muteButton:hover {
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        #muteButton:active {
-            transform: translateY(0) scale(0.98);
+            background: linear-gradient(135deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            box-shadow: none;
+            opacity: 0.9;
         }
 
         #muteButton svg {
@@ -168,46 +155,47 @@
         /* Indicatore "speaking" */
         .speaking-indicator {
             position: absolute;
-            top: -2px;
-            right: -2px;
+            top: -3px;
+            right: -3px;
             width: 12px;
             height: 12px;
-            background: #10b981;
+            background: #00e676;
             border-radius: 50%;
             border: 2px solid var(--bg-secondary);
             animation: speakingPulse 1s ease-in-out infinite;
             opacity: 0;
-            transition: opacity 0.3s;
+            transition: opacity 0.2s;
         }
 
         .speaking-indicator.active {
             opacity: 1;
+            box-shadow: 0 0 10px rgba(0,230,118,0.6);
         }
 
         @keyframes speakingPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            50% { transform: scale(1.25); }
         }
 
         /* === CHAT AREA === */
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 30px 20px 140px 20px;
+            padding: 30px 22px 150px 22px;
             position: relative;
             z-index: 1;
         }
 
         .message-wrapper {
-            max-width: 900px;
-            margin: 0 auto 24px auto;
-            animation: messageSlide 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 920px;
+            margin: 0 auto 22px auto;
+            animation: messageSlide 0.45s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes messageSlide {
             from { 
                 opacity: 0; 
-                transform: translateY(20px) scale(0.95); 
+                transform: translateY(18px) scale(0.98); 
             }
             to { 
                 opacity: 1; 
@@ -217,9 +205,11 @@
 
         /* === MESSAGGIO UTENTE === */
         .message-wrapper.user .message-box {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+            background: linear-gradient(135deg, rgba(255,45,45,0.06), rgba(255,45,45,0.02));
             position: relative;
             overflow: hidden;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(255,45,45,0.04);
         }
 
         .message-wrapper.user .message-box::before {
@@ -228,26 +218,19 @@
             inset: 0;
             border-radius: 16px;
             padding: 1px;
-            background: linear-gradient(135deg, 
-                var(--accent-cyan),
-                var(--accent-blue),
-                var(--accent-purple),
-                var(--accent-pink),
-                var(--accent-cyan)
-            );
-            background-size: 300% 300%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: rgbGradientFlow 8s ease infinite;
-            opacity: 0.6;
+            background: linear-gradient(90deg, rgba(255,45,45,0.35), rgba(255,120,120,0.25));
+            background-size: 200% 200%;
+            mix-blend-mode: overlay;
+            opacity: 0.08;
         }
 
         /* === MESSAGGIO AI === */
         .message-wrapper.ai .message-box {
-            background: rgba(21, 23, 32, 0.6);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
             position: relative;
             overflow: hidden;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.02);
         }
 
         .message-wrapper.ai .message-box::before {
@@ -256,31 +239,16 @@
             inset: 0;
             border-radius: 16px;
             padding: 1px;
-            background: linear-gradient(135deg, 
-                var(--accent-cyan),
-                var(--accent-blue),
-                var(--accent-purple),
-                var(--accent-pink),
-                var(--accent-cyan)
-            );
-            background-size: 300% 300%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: rgbGradientFlow 10s ease infinite;
-            opacity: 0.5;
-        }
-
-        @keyframes rgbGradientFlow {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
+            background: linear-gradient(90deg, rgba(255,45,45,0.22), rgba(255,120,120,0.12));
+            background-size: 200% 200%;
+            opacity: 0.05;
         }
 
         .message-box {
-            padding: 20px 24px;
+            padding: 18px 22px;
             border-radius: 16px;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             position: relative;
             z-index: 1;
         }
@@ -289,40 +257,41 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
         }
 
         .avatar {
-            width: 36px;
-            height: 36px;
+            width: 38px;
+            height: 38px;
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             position: relative;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
         }
 
         .avatar.user {
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            background: linear-gradient(135deg, #2b2b2f, #141416);
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .avatar.ai {
-            background: linear-gradient(135deg, #10b981, #06b6d4);
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            background: linear-gradient(135deg, var(--accent-red), #8b0000);
+            border: 1px solid rgba(255,255,255,0.03);
         }
 
         .avatar svg {
             width: 20px;
             height: 20px;
             fill: white;
-            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
         }
 
         .sender-name {
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 700;
             color: var(--text-primary);
         }
 
@@ -335,34 +304,34 @@
 
         .message-text {
             font-size: 15px;
-            line-height: 1.7;
+            line-height: 1.65;
             color: var(--text-secondary);
             word-wrap: break-word;
         }
 
         .message-wrapper.user .message-text {
-            color: rgba(255, 255, 255, 0.95);
+            color: rgba(255,255,255,0.95);
         }
 
         .command-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(16, 185, 129, 0.15);
-            color: #10b981;
+            background: rgba(255,45,45,0.06);
+            color: var(--accent-red);
             padding: 6px 12px;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 12px;
-            font-weight: 500;
+            font-weight: 600;
             margin-top: 12px;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(255,45,45,0.12);
         }
 
         .command-badge::before {
             content: '';
             width: 6px;
             height: 6px;
-            background: #10b981;
+            background: var(--accent-red);
             border-radius: 50%;
             animation: pulse 2s ease infinite;
         }
@@ -375,15 +344,15 @@
         /* === TYPING INDICATOR === */
         .typing-indicator {
             display: flex;
-            gap: 6px;
-            padding: 4px 0;
+            gap: 8px;
+            padding: 6px 0;
         }
 
         .typing-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+            background: linear-gradient(135deg, #ff7b7b, var(--accent-red));
             animation: typingBounce 1.4s infinite ease-in-out both;
         }
 
@@ -401,8 +370,8 @@
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 30px 20px;
-            background: linear-gradient(to top, var(--bg-primary) 0%, transparent 100%);
+            padding: 32px 22px;
+            background: linear-gradient(to top, rgba(5,5,6,0.9) 0%, transparent 100%);
             z-index: 90;
             display: flex;
             justify-content: center;
@@ -410,26 +379,25 @@
 
         .input-wrapper {
             width: 100%;
-            max-width: 900px;
+            max-width: 920px;
             position: relative;
         }
 
-        /* Bordo RGB animato per l'input */
+        /* Border animated for input */
         .input-rgb-border {
             position: absolute;
             inset: -2px;
             background: linear-gradient(90deg,
-                var(--accent-cyan),
-                var(--accent-blue),
-                var(--accent-purple),
-                var(--accent-pink),
-                var(--accent-cyan)
+                rgba(255,45,45,0.9),
+                rgba(255,120,120,0.9),
+                rgba(255,45,45,0.9)
             );
-            background-size: 300% 300%;
+            background-size: 200% 200%;
             border-radius: 18px;
-            animation: rgbBorderSpin 8s linear infinite;
-            opacity: 0.8;
-            filter: blur(1px);
+            animation: rgbBorderSpin 6s linear infinite;
+            opacity: 0.9;
+            filter: blur(3px);
+            pointer-events: none;
         }
 
         @keyframes rgbBorderSpin {
@@ -437,187 +405,128 @@
             100% { background-position: 200% 50%; }
         }
 
-        .input-box {
+       .input-box {
             position: relative;
-            background: rgba(21, 23, 32, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
             border-radius: 16px;
-            padding: 16px 20px;
+            padding: 10px 18px;
             display: flex;
-            align-items: flex-end;
+            align-items: flex-end; /* ripristinato: testo allineato sul piano orizzontale (baseline) */
             gap: 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 14px 50px rgba(0,0,0,0.6);
+            min-height: 56px;
         }
 
         #messageInput {
             flex: 1;
             background: transparent;
             border: none;
-            color: var(--text-primary);
-            font-size: 15px;
+            color: rgba(255,255,255,0.96);
+            font-size: 16.5px;
             font-family: inherit;
             outline: none;
             resize: none;
-            max-height: 200px;
+            max-height: 220px;
             line-height: 1.6;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            caret-color: #ffffff;
+            padding: 8px 6px;
+            text-align: left; /* torna allineato a sinistra */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
         }
 
-        #messageInput::placeholder {
-            color: var(--text-tertiary);
+        /* Placeholder più leggibile e allineato a sinistra */
+        #messageInput::placeholder { 
+            color: rgba(255,255,255,0.85); 
+            font-weight: 600;
+            opacity: 1;
+            text-align: left;
         }
+        #messageInput:-ms-input-placeholder { color: rgba(255,255,255,0.85); } /* IE 10+ */
+        #messageInput::-ms-input-placeholder { color: rgba(255,255,255,0.85); } /* Edge Legacy */
+        #messageInput::-webkit-input-placeholder { color: rgba(255,255,255,0.85); }
 
+        /* Mobile: mantiene leggibilità e allinea a sinistra per facilitare la digitazione */
+        @media (max-width: 480px) {
+            .input-box { padding: 10px 12px; min-height: 56px; }
+            #messageInput { text-align: left; padding-left: 12px; font-size: 15.5px; }
+        }
+        
         #micButton {
             width: 44px;
             height: 44px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, #10b981, #06b6d4);
+            background: linear-gradient(135deg, #ff6b6b, #ff2d2d);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+            transition: all 0.18s ease;
+            box-shadow: 0 6px 20px rgba(255,45,45,0.18);
             position: relative;
             overflow: hidden;
         }
 
         #micButton.recording {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.6);
-            animation: recordingPulse 1.5s ease-in-out infinite;
+            animation: recordingPulse 1.4s ease-in-out infinite;
+            transform: scale(1.02);
         }
 
         @keyframes recordingPulse {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); box-shadow: 0 4px 30px rgba(239, 68, 68, 0.8); }
-        }
-
-        #micButton::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        #micButton:hover:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        #micButton:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        #micButton:active:not(:disabled) {
-            transform: translateY(0) scale(0.98);
+            50% { transform: scale(1.06); box-shadow: 0 6px 30px rgba(255,45,45,0.28); }
         }
 
         #micButton:disabled {
-            background: rgba(107, 114, 128, 0.3);
+            background: rgba(255,255,255,0.03);
             cursor: not-allowed;
             box-shadow: none;
             opacity: 0.5;
         }
 
-        #micButton svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
-            position: relative;
-            z-index: 1;
-        }
+        #micButton svg { width: 20px; height: 20px; fill: white; }
 
         #sendButton {
             width: 44px;
             height: 44px;
             border-radius: 12px;
             border: none;
-            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            background: linear-gradient(135deg, var(--accent-red), #ff7b7b);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+            transition: all 0.18s ease;
+            box-shadow: 0 6px 20px rgba(255,45,45,0.18);
             position: relative;
             overflow: hidden;
         }
 
-        #sendButton::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        #sendButton:hover:not(:disabled)::before {
-            opacity: 1;
-        }
-
-        #sendButton:hover:not(:disabled) {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 8px 30px rgba(59, 130, 246, 0.6);
-        }
-
-        #sendButton:active:not(:disabled) {
-            transform: translateY(0) scale(0.98);
-        }
-
         #sendButton:disabled {
-            background: rgba(107, 114, 128, 0.3);
+            background: rgba(255,255,255,0.02);
             cursor: not-allowed;
             box-shadow: none;
-            opacity: 0.5;
+            opacity: 0.45;
         }
 
-        #sendButton svg {
-            width: 20px;
-            height: 20px;
-            fill: white;
-            position: relative;
-            z-index: 1;
-        }
+        #sendButton svg { width: 20px; height: 20px; fill: white; }
 
         /* Custom Scrollbar */
-        ::-webkit-scrollbar { 
-            width: 8px; 
-        }
-
-        ::-webkit-scrollbar-track { 
-            background: rgba(255, 255, 255, 0.02); 
-        }
-
-        ::-webkit-scrollbar-thumb { 
-            background: linear-gradient(180deg, var(--accent-blue), var(--accent-purple));
-            border-radius: 10px; 
-        }
-
-        ::-webkit-scrollbar-thumb:hover { 
-            background: linear-gradient(180deg, var(--accent-purple), var(--accent-pink));
-        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: linear-gradient(180deg, #ff7b7b, var(--accent-red)); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: linear-gradient(180deg, var(--accent-red), #ff2d2d); }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .message-wrapper {
-                margin-bottom: 16px;
-            }
-            
-            .message-box {
-                padding: 16px 18px;
-            }
-            
-            .input-area-container {
-                padding: 20px 12px;
-            }
-
-            .chat-header {
-                padding: 0 12px;
-            }
+            .message-wrapper { margin-bottom: 14px; }
+            .message-box { padding: 14px 16px; }
+            .input-area-container { padding: 18px 12px; }
+            .chat-header { padding: 0 12px; }
         }
     </style>
 </head>
@@ -625,21 +534,21 @@
 
     <header class="chat-header">
         <div class="header-content">
-            <div class="header-logo">
-                <svg viewBox="0 0 24 24">
+            <div class="header-logo" aria-hidden="true">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
                 </svg>
             </div>
-            <div class="header-title">Elena AI v1.2</div>
+            <div class="header-title">Roblox AI v1.2</div>
         </div>
-        <button id="muteButton" title="Attiva/Disattiva voce AI">
+        <button id="muteButton" title="Attiva/Disattiva voce AI" aria-pressed="true">
             <svg id="volumeIcon" viewBox="0 0 24 24">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
             </svg>
             <svg id="muteIcon" viewBox="0 0 24 24" style="display: none;">
                 <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
             </svg>
-            <div class="speaking-indicator"></div>
+            <div class="speaking-indicator" aria-hidden="true"></div>
         </button>
     </header>
 
@@ -652,11 +561,11 @@
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
                         </svg>
                     </div>
-                    <span class="sender-name">Elena AI</span>
+                    <span class="sender-name">Roblox AI</span>
                     <span class="timestamp" id="welcomeTime"></span>
                 </div>
                 <div class="message-text">
-                    Che vuoi
+                    Ciao, come posso aiutarti?
                 </div>
             </div>
         </div>
@@ -664,16 +573,16 @@
 
     <div class="input-area-container">
         <div class="input-wrapper">
-            <div class="input-rgb-border"></div>
+            <div class="input-rgb-border" aria-hidden="true"></div>
             <div class="input-box">
                 <textarea id="messageInput" rows="1" placeholder="Scrivi un messaggio..." autocomplete="off"></textarea>
-                <button id="micButton">
+                <button id="micButton" aria-label="Registra voce">
                     <svg viewBox="0 0 24 24">
                         <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
                         <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
                     </svg>
                 </button>
-                <button id="sendButton" disabled>
+                <button id="sendButton" disabled aria-label="Invia">
                     <svg viewBox="0 0 24 24" fill="none">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="white"/>
                     </svg>
@@ -704,24 +613,20 @@
         function speak(text) {
             if (isMuted) return;
 
-            // Stop any current speech
             synth.cancel();
 
-            // Create utterance
             currentUtterance = new SpeechSynthesisUtterance(text);
             currentUtterance.lang = 'it-IT';
             currentUtterance.rate = 1.0;
             currentUtterance.pitch = 1.0;
             currentUtterance.volume = 1.0;
 
-            // Get Italian voices
             const voices = synth.getVoices();
-            const italianVoice = voices.find(voice => voice.lang.startsWith('it')) || voices[0];
+            const italianVoice = voices.find(voice => voice.lang && voice.lang.startsWith('it')) || voices[0];
             if (italianVoice) {
                 currentUtterance.voice = italianVoice;
             }
 
-            // Event handlers
             currentUtterance.onstart = () => {
                 speakingIndicator.classList.add('active');
             };
@@ -734,7 +639,6 @@
                 speakingIndicator.classList.remove('active');
             };
 
-            // Speak
             synth.speak(currentUtterance);
         }
 
@@ -748,30 +652,36 @@
                 muteIcon.style.display = 'block';
                 synth.cancel(); // Stop any current speech
                 speakingIndicator.classList.remove('active');
+                muteButton.setAttribute('aria-pressed', 'true');
             } else {
                 muteButton.classList.remove('muted');
                 volumeIcon.style.display = 'block';
                 muteIcon.style.display = 'none';
+                muteButton.setAttribute('aria-pressed', 'false');
             }
 
-            // Save preference
-            localStorage.setItem('elenaAiMuted', isMuted);
+            // Save preference (key renamed to robloxAiMuted)
+            localStorage.setItem('robloxAiMuted', isMuted);
         });
 
         // Load mute preference
-        const savedMute = localStorage.getItem('elenaAiMuted');
+        const savedMute = localStorage.getItem('robloxAiMuted');
         if (savedMute !== null) {
             isMuted = savedMute === 'true';
             if (isMuted) {
                 muteButton.classList.add('muted');
                 volumeIcon.style.display = 'none';
                 muteIcon.style.display = 'block';
+                muteButton.setAttribute('aria-pressed', 'true');
+            } else {
+                muteButton.setAttribute('aria-pressed', 'false');
             }
         } else {
             // Default is muted
             muteButton.classList.add('muted');
             volumeIcon.style.display = 'none';
             muteIcon.style.display = 'block';
+            muteButton.setAttribute('aria-pressed', 'true');
         }
 
         // Load voices (required for some browsers)
@@ -842,7 +752,7 @@
 
         // Speak welcome message if unmuted
         if (!isMuted) {
-            setTimeout(() => speak('Che vuoi'), 500);
+            setTimeout(() => speak('Ciao, come posso aiutarti?'), 500);
         }
 
         // Auto-resize textarea
@@ -882,7 +792,7 @@
                 <div class="message-box">
                     <div class="message-header">
                         <div class="avatar ${isUser ? 'user' : 'ai'}">${isUser ? icons.user : icons.ai}</div>
-                        <span class="sender-name">${isUser ? 'Tu' : 'Elena AI'}</span>
+                        <span class="sender-name">${isUser ? 'Tu' : 'Roblox AI'}</span>
                         <span class="timestamp">${getTime()}</span>
                     </div>
                     <div class="message-text">${formattedText}</div>
@@ -908,7 +818,7 @@
                 <div class="message-box">
                     <div class="message-header">
                         <div class="avatar ai">${icons.ai}</div>
-                        <span class="sender-name">Elena AI</span>
+                        <span class="sender-name">Roblox AI</span>
                         <span class="timestamp">${getTime()}</span>
                     </div>
                     <div class="typing-indicator">
