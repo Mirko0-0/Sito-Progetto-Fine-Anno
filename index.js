@@ -3,214 +3,282 @@ const mysql = require('mysql2/promise');
 const path = require('path');
 
 const GEMINI_API_KEY = '';
-const MODEL = 'gemini-3-flash-preview';
+const MODEL = 'gemini-2.5-flash';
 
 const app = express();
 const PORT = 3000;
 
+const SESSION_ID = 1; // single player
+
 app.use(express.json());
 app.use(express.static('public'));
 
-// Configurazione database
-const dbConfig = {
+// ======================
+// API KEY (SICUREZZA)
+// ======================
+app.use((req, res, next) => {
+  const key = req.headers['x-api-key'];
+  if (key !== 'maturita2025') {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  next();
+});
+
+// ======================
+// DB POOL
+// ======================
+const db = mysql.createPool({
   host: '127.0.0.1',
   port: 3306,
   user: 'root',
   password: '',
-  database: 'test'
-};
+  database: 'progettomaturita',
+  waitForConnections: true,
+  connectionLimit: 10
+});
 
-async function saveMessageToDB(role, content) {
-  let connection;
-  try {
-    connection = await mysql.createConnection(dbConfig);
-    const query = 'INSERT INTO messaggi (ruolo, contenuto) VALUES (?, ?)';
-    await connection.execute(query, [role === 'utente' ? 'utente' : 'ia', content]);
-  } catch (error) {
-    console.error('Errore nel salvataggio del messaggio:', error);
-  } finally {
-    if (connection) await connection.end();
-  }
-}
-
-async function saveCommandToDB(commandText) {
-  let connection;
-  try {
-    connection = await mysql.createConnection(dbConfig);
-    const query = 'INSERT INTO comandi (tipo_comando, stato) VALUES (?, ?)';
-    const [result] = await connection.execute(query, [commandText, 'in_attesa']);
-    
-    console.log('Comando salvato con ID:', result.insertId);
-    return result.insertId;
-  } catch (error) {
-    console.error('Errore nel salvataggio del comando:', error);
-    throw error;
-  } finally {
-    if (connection) await connection.end();
-  }
-}
-
+// ======================
+// GEMINI
+// ======================
 async function sendMessageToGemini(message, instructions) {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
-  const requestBody = {
-    system_instruction: {
-      parts: [
-        {
-          text: instructions
-        }
-      ]
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'x-goog-api-key': GEMINI_API_KEY,
+      'Content-Type': 'application/json'
     },
-    contents: [
-      {
-        parts: [
-          {
-            text: message
-          }
-        ]
-      }
-    ]
-  };
-
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'x-goog-api-key': GEMINI_API_KEY,
-        'Content-Type': 'application/json'
+    body: JSON.stringify({
+      system_instruction: {
+        parts: [{ text: instructions }]
       },
-      body: JSON.stringify(requestBody)
-    });
+      contents: {
+        parts: [{ text: message }]
+      }
+    })
+  });
 
-    const data = await response.json();
+  const data = await response.json();
 
-    if (!response.ok) {
-      throw new Error(`Error: ${response.status} - ${JSON.stringify(data)}`);
-    }
-
-    return data;
-  } catch (error) {
-    console.error('Errore nella richiesta:', error);
-    throw error;
+  if (!response.ok) {
+    throw new Error(JSON.stringify(data));
   }
+
+  return data;
 }
 
+// ======================
+// UTIL
+// ======================
 function extractCommand(text) {
-  const pattern = /\$\^\{\{!(.*?)!\}\}\^\$/;
-  const match = text.match(pattern);
+  const matches = [...text.matchAll(/\$\^\{\{!(.*?)!\}\}\^\$/g)];
+  if (matches.length === 0) return null;
 
-  if (match && match[1]) {
-    return match[1];
+  try {
+    return JSON.parse(matches[0][1]);
+  } catch {
+    return null;
   }
-
-  return null;
 }
 
 function removeCommand(text) {
-  if (!text) return text;
-  const pattern = /\$\^\{\{!(.*?)!\}\}\^\$/g;
-  let result = text.replace(pattern, '');
-  result = result.replace(/\s{2,}/g, ' ').trim();
-  return result;
+  return text
+    .replace(/\$\^\{\{!(.*?)!\}\}\^\$/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
 }
 
-// ============================================
-// API REST ENDPOINTS
-// ============================================
+// ======================
+// DB FUNCTIONS
+// ======================
+async function saveMessage(sessionId, ruolo, contenuto) {
+  await db.execute(`
+    INSERT INTO messaggi (id_sessione, ruolo, contenuto)
+    VALUES (?, ?, ?)
+  `, [sessionId, ruolo, contenuto]);
+}
 
-// GET /api/comando - Ottiene il comando più vecchio non eseguito
-app.get('/api/comando', async (req, res) => {
-  let connection;
-  try {
-    connection = await mysql.createConnection(dbConfig);
-    
-    const [rows] = await connection.execute(
-      'SELECT id, tipo_comando FROM comandi WHERE stato = "in_attesa" ORDER BY data_creazione ASC LIMIT 1'
-    );
-    
-    if (rows.length === 0) {
-      return res.json({ success: false, message: 'Nessun comando in attesa' });
-    }
-    
-    const comando = rows[0];
-    
-    // Segna come eseguito
-    await connection.execute(
-      'UPDATE comandi SET stato = "eseguito", data_esecuzione = NOW() WHERE id = ?',
-      [comando.id]
-    );
-    
-    console.log(`Comando inviato a Roblox: ${comando.tipo_comando}`);
-    
-    return res.json({
-      success: true,
-      comando: comando.tipo_comando
-    });
-    
-  } catch (error) {
-    console.error('Errore nell\'API:', error);
-    return res.status(500).json({ success: false, error: error.message });
-  } finally {
-    if (connection) await connection.end();
-  }
-});
+async function saveCommand(commandObj) {
+  const [result] = await db.execute(`
+    INSERT INTO comandi 
+    (id_sessione, tipo_comando, payload, stato)
+    VALUES (?, ?, ?, 'in_attesa')
+  `, [
+    SESSION_ID,
+    commandObj.action || 'ai_command',
+    JSON.stringify(commandObj)
+  ]);
 
-// POST /api/chat - Invia messaggio all'AI
+  return result.insertId;
+}
+
+async function logError(id_comando, message) {
+  await db.execute(`
+    INSERT INTO errori (id_comando, messaggio)
+    VALUES (?, ?)
+  `, [id_comando, message]);
+}
+
+// ======================
+// CHAT
+// ======================
 app.post('/api/chat', async (req, res) => {
   try {
     const { message } = req.body;
-    
-    if (!message) {
-      return res.status(400).json({ success: false, error: 'Messaggio mancante' });
-    }
 
-    // Salva il messaggio dell'utente
-    await saveMessageToDB('utente', message);
-
-    const instructions = "per accendere le luci alla fine del testo scrivi senza spazi $^{{!on.IDLUCE!}}^$ devi lo stesso rispondere come faresti sempre ma mettendo il comando alla fine. se non è chiesto di accendere niente tu non fare il comando";
-    
-    const result = await sendMessageToGemini(message, instructions);
-    
-    if (result.candidates && result.candidates[0]) {
-      const text = result.candidates[0].content.parts[0].text;
-      const comando = extractCommand(text);
-      
-      // Rimuovi il comando dalla risposta per salvarla nel DB e inviarla all'utente
-      const responseText = removeCommand(text);
-
-      // Salva la risposta dell'AI
-      await saveMessageToDB('ia', responseText);
-      
-      // Salva il comando se presente
-      if (comando !== null) {
-        await saveCommandToDB(comando);
-        console.log('Comando estratto e salvato:', comando);
-      }
-      
-      return res.json({
-        success: true,
-        response: responseText,
-        hasCommand: comando !== null
+    if (!message || typeof message !== 'string' || message.length > 500) {
+      return res.status(400).json({
+        success: false,
+        error: 'Messaggio non valido'
       });
-    } else {
-      return res.status(500).json({ success: false, error: 'Nessuna risposta dall\'AI' });
     }
-    
-  } catch (error) {
-    console.error('Errore nella chat:', error);
-    return res.status(500).json({ success: false, error: error.message });
+
+    // salva utente
+    await saveMessage(SESSION_ID, 'utente', message);
+
+    const instructions = `
+Se devi eseguire un'azione nel gioco, restituisci SOLO un comando JSON nel formato:
+
+$^{{!{"action":"nome","parametri":{}}!}}^$
+
+Esempio:
+$^{{!{"action":"accendi_luce","id":12}!}}^$
+
+Regole:
+- JSON valido
+- massimo un comando
+- niente testo dentro il JSON
+
+Se non serve azione, rispondi normalmente.
+`;
+
+    const result = await sendMessageToGemini(message, instructions);
+
+    const text = result?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    const command = extractCommand(text);
+    const responseText = removeCommand(text);
+
+    // salva risposta AI
+    await saveMessage(SESSION_ID, 'ia', responseText);
+
+    let commandId = null;
+
+    if (command) {
+      commandId = await saveCommand(command);
+      console.log('Comando salvato:', command);
+    }
+
+    return res.json({
+      success: true,
+      response: responseText,
+      hasCommand: !!command,
+      commandId
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
   }
 });
 
-// Rotta per la pagina chat
+// ======================
+// ROBLOX POLLING (SAFE)
+// ======================
+app.get('/api/comando', async (req, res) => {
+  const connection = await db.getConnection();
+
+  try {
+    await connection.beginTransaction();
+
+    const [rows] = await connection.execute(`
+      SELECT *
+      FROM comandi
+      WHERE stato = 'in_attesa'
+      ORDER BY data_creazione ASC
+      LIMIT 1
+      FOR UPDATE
+    `);
+
+    if (rows.length === 0) {
+      await connection.commit();
+      return res.json({ success: false, message: 'Nessun comando' });
+    }
+
+    const comando = rows[0];
+
+    await connection.execute(`
+      UPDATE comandi
+      SET stato = 'eseguito',
+          data_esecuzione = NOW()
+      WHERE id = ?
+    `, [comando.id]);
+
+    await connection.commit();
+
+    return res.json({
+      success: true,
+      comando: {
+        id: comando.id,
+        tipo: comando.tipo_comando,
+        payload: JSON.parse(comando.payload),
+        sessione: comando.id_sessione
+      }
+    });
+
+  } catch (err) {
+    await connection.rollback();
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  } finally {
+    connection.release();
+  }
+});
+
+// ======================
+// EVENTO DA ROBLOX
+// ======================
+app.post('/api/evento', async (req, res) => {
+  try {
+    const { id_comando, descrizione, esito } = req.body;
+
+    await db.execute(`
+      INSERT INTO eventi_gioco (id_comando, descrizione, esito)
+      VALUES (?, ?, ?)
+    `, [id_comando, descrizione, esito]);
+
+    if (esito === 'fallimento') {
+      await logError(id_comando, descrizione);
+    }
+
+    return res.json({ success: true });
+
+  } catch (err) {
+    return res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
+// ======================
+// CHAT PAGE
+// ======================
 app.get('/chat', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'chat.html'));
 });
 
-// Avvia il server
+// ======================
+// START SERVER
+// ======================
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🚀 Server avviato!`);
-  console.log(`📡 API REST: http://localhost:${PORT}/api/comando`);
-  console.log(`💬 Chat UI: http://localhost:${PORT}/chat`);
-  console.log(`\n🌐 Da Roblox usa: http://TUO_IP_LOCALE:${PORT}/api/comando`);
+  console.log(`🚀 Server avviato`);
+  console.log(`📡 API: http://localhost:${PORT}/api/comando`);
+  console.log(`💬 Chat: http://localhost:${PORT}/chat`);
 });
