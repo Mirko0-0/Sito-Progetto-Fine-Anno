@@ -1,5 +1,5 @@
 ### To do List
-- [x] Basica codice
-- [ ] fix  status : UNAVAILABLE (con più chiavi anche)
-- [ ] fix dettatura
-- [ ] roblox
+- [X] Basica codice
+- [X] fix  status (Utilizziamo OpenAi API)
+- [X] fix dettatura
+- [X] roblox
